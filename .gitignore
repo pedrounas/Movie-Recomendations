@@ -1,2 +1,5 @@
-Data/profile.txt
-Data/Ratings.timed.txt
+Data/*
+.vscode
+.RData
+.Rhistory
+.DS_Store
