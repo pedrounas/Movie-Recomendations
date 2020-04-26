@@ -2,7 +2,7 @@ import pandas as pd
 
 # Clean up movie titles and IDs
 
-with open('Data/movie.txt') as f:
+with open('Data/movie.txt', encoding = "ISO-8859-1") as f:
     text = f.read().splitlines()
 
 data = []
@@ -25,7 +25,7 @@ df.to_csv('Data/movie.csv', index=False)
 
 # Clean up the ratings file
 
-df = pd.read_csv('Data/Ratings.timed.txt', delim_whitespace=True, encoding='utf-16-le')
+df = pd.read_csv('Data/Ratings.timed.txt', sep= '	', encoding='utf-16-le')
 df = df.iloc[:, :-1]
 
 df.to_csv('Data/Ratings.csv', index=False)
