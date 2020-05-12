@@ -43,7 +43,7 @@ b <- as(y, "binaryRatingMatrix")
 model_params <- list(support=1/dim(b)[2],
                      confidence=0.8)
 
-set.movies <-evaluationScheme(r,method='cross-validation',train=.7,given=1,goodRating=4,k=10)
+set.movies <-evaluationScheme(r,method='cross-validation',train=.7,given=1,goodRating=2.5,k=10)
 set.movies_ <-evaluationScheme(b,method='cross-validation',train=.7,given=-1,k=10)
 
 rec_POPULAR <- Recommender(getData(set.movies,"train"), method='POPULAR')
