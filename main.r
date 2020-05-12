@@ -4,13 +4,14 @@ require(reshape2)
 require(ggplot2)
 require(ggpubr)
 
+
 set.seed(1)
 
 data <- read.csv('Data/movie.csv')
 ratings <- read.csv('Data/Ratings.csv') 
 ratings.date <- ratings$date # Talvez usar isto no futuro 
 ratings <- ratings %>% select(userid,movieid,rating)
-
+  
 top_critics <- ratings %>% group_by(userid) %>% filter(n() > 2000) %>% as.data.frame()
 sample_ratings <- top_critics[sample(nrow(top_critics), nrow(top_critics)/200), ]
 sample_ratings <- merge(sample_ratings, data, by='movieid')
@@ -87,3 +88,17 @@ as(pred_AR,"list")
 
 # rules <- getModel(rec_AR)$rule_base
 # inspect(rules)
+
+#Evaluation 
+
+e <- evaluationScheme(r, method="split", train=0.7, given = 1, goodRating=2.5)
+e
+
+methods <- list("popular" = list(name="POPULAR", param = NULL),
+                "user-based CF" = list(name="UBCF", param = NULL))
+
+results <- evaluate(e, methods, n=c(1,2,5))     
+
+plot(results, annotate = 1:4, legend="topleft")
+plot(results, "prec/rec", annotate=2)
+

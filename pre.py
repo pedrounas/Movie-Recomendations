@@ -26,7 +26,7 @@ df.to_csv('Data/movie.csv', index=False)
 # Clean up the ratings file
 
 df = pd.read_csv('Data/Ratings.timed.txt', sep= '	', encoding='utf-16-le')
-df = df.iloc[:, :-1]
+#df = df.iloc[:, :-1]
 
 df.to_csv('Data/Ratings.csv', index=False)
 
