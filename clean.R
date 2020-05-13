@@ -41,7 +41,7 @@ y <- y[!useless ,]
 r <- as(x, "realRatingMatrix")
 b <- as(y, "binaryRatingMatrix")
 model_params <- list(support=1/dim(b)[2],
-                     confidence=0.8)
+                     confidence=0.01)
 
 set.movies <-evaluationScheme(r,method='cross-validation',train=.7,given=1,goodRating=2.5,k=10)
 set.movies_ <-evaluationScheme(b,method='cross-validation',train=.7,given=-1,k=10)
@@ -56,12 +56,27 @@ pred_AR <- predict(rec_AR,getData(set.movies_,"known"))
 
 methods <- list("popular" = list(name="POPULAR", param = NULL),
                 "user-based CF" = list(name="UBCF", param = NULL))
-
-methods_ <- list("popular" = list(name="POPULAR", param = NULL),
-                "user-based CF" = list(name="UBCF", param = NULL),
-                "association rules" = list(name="AR"), param = model_params)
+methods_ <- list("association rules" = list(name="AR", param = model_params))
 
 acc_REC <- evaluate(set.movies, methods, n=c(1,2,5)) 
-acc_REC_ <- evaluate(set.movies_, methods_, n=c(1,2,5)) # ESTE CABRAO NAO DA
+acc_REC_ <- evaluate(set.movies_, methods_, n=c(1,2,5))
+acc_REC$`association rules` <- acc_REC_$`association rules`
 
-plot(acc_REC, annotate = 1:4, legend="topleft")
+# plot(acc_REC, annotate = 1:4, legend="topleft")
+
+avg.conf <- function(results) {
+  tmp <- results %>%
+    getConfusionMatrix()  %>%  
+    as.list() 
+  as.data.frame(Reduce("+",tmp) / length(tmp)) %>% 
+    mutate(n = c(1, 2, 5)) %>%
+    select('n', 'precision', 'recall', 'TPR', 'FPR') 
+}
+
+final.results <- acc_REC %>% map(avg.conf) %>% 
+  enframe() %>% unnest(cols = value)
+
+ggplot(final.results, aes(x=FPR, y=TPR, colour = fct_reorder2(as.factor(name), 
+                                                              FPR, TPR))) + geom_line() +
+  geom_label(aes(label = n)) + 
+  labs(title = "ROC curves", colour = "Model")
