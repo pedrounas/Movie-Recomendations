@@ -12,7 +12,7 @@ ratings <- read.csv('Data/Ratings.csv')
 ratings.date <- ratings$date # Talvez usar isto no futuro 
 ratings <- ratings %>% select(userid,movieid,rating)
 
-top_critics <- ratings %>% group_by(userid) %>% filter(n() > 2000) %>% as.data.frame()
+top_critics <- ratings %>% group_by(userid) %>% filter(n() > 1000) %>% as.data.frame()
 sample_ratings <- top_critics[sample(nrow(top_critics), nrow(top_critics)/200), ]
 sample_ratings <- merge(sample_ratings, data, by='movieid')
 sample_ratings <- sample_ratings %>% select(userid,moviename,rating)
@@ -40,11 +40,11 @@ y <- y[!useless ,]
 
 r <- as(x, "realRatingMatrix")
 b <- as(y, "binaryRatingMatrix")
-model_params <- list(support=1/dim(b)[2],
+model_params <- list(support=10/dim(b)[2],
                      confidence=0.01)
 
 set.movies <-evaluationScheme(r,method='cross-validation',train=.7,given=1,goodRating=2.5,k=10)
-set.movies_ <-evaluationScheme(b,method='cross-validation',train=.7,given=-1,k=10)
+set.movies_ <-evaluationScheme(b,method='cross-validation',train=.7,given=1,k=10)
 
 rec_POPULAR <- Recommender(getData(set.movies,"train"), method='POPULAR')
 rec_COLAB_FILTER <- Recommender(getData(set.movies,"train"), method='UBCF')
@@ -58,7 +58,11 @@ methods <- list("popular" = list(name="POPULAR", param = NULL),
                 "user-based CF" = list(name="UBCF", param = NULL))
 methods_ <- list("association rules" = list(name="AR", param = model_params))
 
+#real
 acc_REC <- evaluate(set.movies, methods, n=c(1,2,5)) 
+#binary
+b_acc_REC <- evaluate(set.movies_, methods, n=c(1,2,5)) 
+
 acc_REC_ <- evaluate(set.movies_, methods_, n=c(1,2,5))
 acc_REC$`association rules` <- acc_REC_$`association rules`
 
@@ -73,10 +77,19 @@ avg.conf <- function(results) {
     select('n', 'precision', 'recall', 'TPR', 'FPR') 
 }
 
-final.results <- acc_REC %>% map(avg.conf) %>% 
+final.results.real <- acc_REC %>% map(avg.conf) %>% 
   enframe() %>% unnest(cols = value)
 
-ggplot(final.results, aes(x=FPR, y=TPR, colour = fct_reorder2(as.factor(name), 
+final.results.binary <- b_acc_REC %>% map(avg.conf) %>% 
+  enframe() %>% unnest(cols = value)
+
+ggplot(final.results.real, aes(x=FPR, y=TPR, colour = fct_reorder2(as.factor(name), 
                                                               FPR, TPR))) + geom_line() +
+  geom_label(aes(label = n)) + 
+  labs(title = "ROC curves", colour = "Model")
+
+
+ggplot(final.results.binary, aes(x=FPR, y=TPR, colour = fct_reorder2(as.factor(name), 
+                                                                     FPR, TPR))) + geom_line() +
   geom_label(aes(label = n)) + 
   labs(title = "ROC curves", colour = "Model")
