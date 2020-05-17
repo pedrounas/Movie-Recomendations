@@ -22,7 +22,7 @@ O objetivo deste trabalho prático consiste em comparar diferentes métodos de r
 
 ## Pré-processamento dos dados 
 
-Ao analisar os ficheiros, reparámos que não estavam bem formatados, por isso começamos por fazer um script em python para os tratar. Para o ficheiro movie.txt, críamos duas colunas, moviename e movieid, contendo os nomes dos filmes e os id's e guardámos num ficheiro csv. O ficheiro Ratings.timed.txt também foi covertido para um ficheiro csv, contendo 4 colunas (userid, movieid, rating, date). Por fim, no ficheiro profile.txt eliminámos os valores em fata uilizando e função dropna() e covertemos este ficheiro para um ficheiro csv com 7 colunas (userid, gender, memberfor, lastlogin, profileview, age).
+Ao analisar os ficheiros, reparámos que não estavam bem formatados, por isso começamos por fazer um script em python para os tratar. Para o ficheiro movie.txt, críamos duas colunas, moviename e movieid, contendo os nomes dos filmes e os id's e guardámos num ficheiro csv. O ficheiro Ratings.timed.txt também foi covertido para um ficheiro csv, contendo 4 colunas (userid, movieid, rating, date). Por fim, no ficheiro profile.txt eliminámos os valores em falta uilizando a função dropna() e covertemos este ficheiro para um ficheiro csv com 7 colunas (userid, gender, memberfor, lastlogin, profileview, age).
 
 
 ## Exploração dos dados 
@@ -73,7 +73,7 @@ ggplot(agg.ratings, aes(x=rating, y=freq)) +
   labs(title='Rating Distribution', x = 'Rating', y='Frequency')
 ```
 
-É possível ver que os ratings atribuídos pelos utilizadores aos filmes são na sua maioria positivos positivos, ou seja, maior que 2.5, o que podemos concluir que os utlizadores têm uma maior tendência para avaliar os filmes que mais gostaram. 
+É possível ver que os ratings atribuídos pelos utilizadores aos filmes são na sua maioria positivos, ou seja, maior que 2.5, o que podemos concluir que os utlizadores têm uma maior tendência para avaliar os filmes que mais gostaram. 
 
 ### Filmes mais populares
 
@@ -92,9 +92,9 @@ ggplot(top.movies, aes(x=moviename, y=freq)) +
 
 ```
 
-Como podemos observar o filme com mais avaliações é o *Transformers: Revenge of the Fallen* com cerca de 30500 avaliações. Já o segundo filme com mais popular, possuí cerca de 20250 avaliações, havendo assim uma grande diferença comparativamente com o primeiro.
+Como podemos observar o filme com mais avaliações é o *Transformers: Revenge of the Fallen* com cerca de 30500 avaliações. Já o segundo filme com mais avaliações, possuí cerca de 20250 avaliações, havendo assim uma grande diferença comparativamente com o primeiro.
 
-### Maiores críticos
+### Utilizadores que fizeram mais avaliações 
 
 
 ```{r critcs, echo=FALSE, fig.height=2.8}
@@ -105,14 +105,14 @@ best.critics$critic <- factor(best.critics$critic, levels = best.critics$critic[
 
 ggplot(best.critics, aes(x=critic, y=freq)) + 
   geom_bar(stat = "identity") +
-  labs(title='Top Critics', x = 'Critic', y='Frequency') +
+  labs(title='Top Users', x = 'User', y='Frequency') +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
 
-Neste gráfico é apresentado os 20 utilizadores que avaliaram o maior número de filmes, sendo o utlizador com o id 103006 com mais de 30000 avaliações atribuídas aos filmes. 
+Neste gráfico é apresentado os 20 utilizadores que avaliaram o maior número de filmes, sendo o utlizador com o ID 103006,  o que possuí mais de 30000 avaliações atribuídas aos filmes. 
 
-### Filmes mais bem avaliados
+### Filmes com melhor avaliação 
 
 ```{r best_movie, echo=FALSE, fig.height=2.8}
 
@@ -130,12 +130,12 @@ ggplot(best.movies, aes(x=moviename, y=rating)) +
 
 ```
 
-Os 10 filmes com uma classficação maior estão apresentados neste gráfico, sendo  *Pirates of the Caribbean-. At Worlds End* o filme com melhor classificação.
+Os 10 filmes com uma classficação maior estão apresentados neste gráfico, sendo  *Pirates of the Caribbean - At Worlds End* o filme com melhor classificação.
 
 
 ## Sistemas de recomendação 
 
-Para a realização desta parte começamos apens por considerar os críticos com mais de 1000 *ratings* dadas, o que nos deixou com 1229 críticos e um total de 2,048,059 avaliações. De modo a ajudar na *performance* foi feita uma *sample* aleatória com 1/50 do tamanho o que nos deixou com 40961 críticas e de modo a facilitar futuras leituras o ID do filme foi substituido pelo seu nome.
+Para a realização desta parte começamos apenas por considerar os utilizadores com mais de 1000 *ratings* dadas, o que nos deixou com 1229 utilizadores e um total de 2,048,059 avaliações. De modo a ajudar na *performance* foi feita uma *sample* aleatória com 1/50 do tamanho o que nos deixou com 40961 observações e de modo a facilitar futuras leituras o ID do filme foi substituido pelo seu nome.
 
 ```{r samples}
 
@@ -146,7 +146,7 @@ sample_ratings <- sample_ratings %>% select(userid,moviename,rating)
 
 ```
 
-Posteriormanete foi criado um *dataset* parecido onde as ratings passaram para o formato binário, onde um filme é considerado bom caso a rating dado pelo crítico seja igual ou superior a 3.5. Isto foi feito para facilitar a posterior conversão a **binaryRatingMatrix**.
+Posteriormente foi criado um *dataset* parecido, onde as ratings passaram para o formato binário. Neste caso, um filme é considerado bom, caso a rating dada pelo utilizador seja igual ou superior a 3.5. Isto foi feito para facilitar a posterior conversão a **binaryRatingMatrix**.
 
 ```{r binary samples}
 
@@ -159,7 +159,7 @@ sample_ratings_binary$rating <-
 
 ```
 
-Para a conversão para as estruturas de dados utilizados pelo **recommenderlab**, utilizamos a função **dcast** para criar uma matrix onde o cada crítico corresponde a uma fila e cada filme a uma coluna, sendo que caso o crítico tenha avaliado um certo filme o valor da célula (crítico, filme) corresponde a essa avaliação, quer seja real ou binária. Removemos depois o ID do crítico e para caso da matrix binária, verificamos se existem avalições em cada fila e caso não haja essas filas são removidas. Por fim procedemos a conversão para as estruturas de dados **realRatingMatrix** e **binaryRatingMatrix** e definimos também o nosso esquema de avalição, que usa **10-fold cross validation** para modelção e um crítico a sorte para a previsão e posterior avaliação da mesma.
+Para a conversão para as estruturas de dados utilizados pelo **recommenderlab**, utilizámos a função **dcast** para criar uma *matrix* onde  cada utilizador corresponde a uma fila e cada filme a uma coluna, sendo que caso o utilizador tenha avaliado um certo filme, o valor da célula (crítico, filme) corresponde a essa avaliação, quer seja real ou binária. Removemos depois o ID do utilizador e para o caso da *matrix* binária, verificámos se existem avaliações em cada fila e caso não haja essas filas são removidas. Por fim, procedemos à conversão para as estruturas de dados **realRatingMatrix** e **binaryRatingMatrix** e definimos também o nosso esquema de avalição, que usa **10-fold cross validation** para modelação e um utilizador à sorte para a previsão e posterior avaliação da mesma.
 
 ``` {r conversion}
 x <- dcast(sample_ratings, userid ~ moviename, value.var = "rating", na.rm = FALSE)
@@ -184,7 +184,7 @@ model_params <- list(support=10/dim(b)[2],
                      confidence=0.5)
 ```
 
-Como parâmetros para o modelo AR usamos a fórmula 10/|DF| para definar o suporte e escolhemos como nível de confiança 0.5 pois após algumas experências, pareceu o valor mais acertado para este problema e procedemos então a avaliação dos modelos usando um crítico para avaliar a performance.
+Como parâmetros para o modelo AR usámos a fórmula 10/|DF| para definar o suporte e escolhemos como nível de confiança 0.5, pois após algumas experências, pareceu o valor mais acertado para este problema. Procedemos então para avaliação dos modelos usando um utilizador para avaliar a *performance*.
 
 ```{r evalutation, eval=F}
 methods <- list("popular" = list(name="POPULAR", param = NULL),
@@ -200,7 +200,7 @@ b_acc_REC <- evaluate(set.movies_, methods_, n=c(1,2,5))
 
 ```
 
-Foi criada depois um função auxiliar para obter a precisão,*recall*,TPR e FPR médio para cada valor de N (1,2,5) em cada modelo, obtendo os seguintes resultadoo.
+Foi criada depois um função auxiliar para obter a precisão,*recall*,TPR e FPR médio para cada valor de N (1,2,5) em cada modelo, obtendo os seguintes resultados:
 
 ```{r load, echo=F}
 load("Helper-Files/acc_REC.rda")
@@ -227,9 +227,9 @@ final.results.real
 final.results.binary
 ```
 
-Observando os resultados anteriores conseguimos observar que na primeira tabela o recomendador **Popular** obteve resultados melhores comparativamente ao **UBCF**, com valores tanto de precisão como de *recall* melhores. Quando aos resultados para a matrix binária o recomendador **Popular** continuou a ser superior aos restantes, sendo que as **Association Rules** obtiveram valores mínimos de precisão e *recal*.
+Observando os resultados anteriores, conseguimos perceber que na primeira tabela o recomendador **Popular** obteve resultados melhores comparativamente ao **UBCF**, com valores tanto de precisão como de *recall* melhores. Quanto aos resultados para a *matrix* binária o recomendador **Popular** continuou a ser superior aos restantes, sendo que as **Association Rules** obtiveram valores mínimos de precisão e *recal*.
 
-Fazendo as **ROC CURVES** vemos que a *Area Under Curve* do Popular é bastante superior a do UBCF no em ambos os plots, e que as Association rules mantêm um valor constante de TPR sendo que a FPR aumenta com o aumento do valor de N, comportamento consistente com os restantes recomendadores. Podemos então concluir que para este caso o melhor recomendador é o **Popular** por uma larga margem.
+Fazendo as **ROC CURVES** vemos que a *Area Under Curve* do Popular é bastante superior a do UBCF em ambos os gráficos, e que as **Association rules** mantêm um valor constante de TPR sendo que a FPR aumenta com o aumento do valor de N, comportamento consistente com os restantes recomendadores. Podemos então concluir que para este caso o melhor recomendador é o **Popular** por uma larga margem.
 
 ```{r eval plots, echo=F}
 a <- ggplot(final.results.real, aes(x=FPR, y=TPR, colour = fct_reorder2(as.factor(name), 
@@ -246,9 +246,9 @@ b <-ggplot(final.results.binary, aes(x=FPR, y=TPR, colour = fct_reorder2(as.fact
 ggarrange(a,b, ncol = 1)
 ```
 
-De modo a comparar as diferentes previõses de diferentes modelos podemos escolher aleatoriamente um utilizador e obter listas com 1, 2 e 5 filmes para cada recomendadador. Ao fazer isto encontramos o problema de que em alguns casos o recomendador UBCF e AR não contêm recomendações por isso for escolhido um utilizador para o qual há recomendações em todos os recomendadores.
+De modo a comparar as diferentes previõses dos diferentes modelos, podemos escolher aleatoriamente um utilizador e obter listas com 1, 2 e 5 filmes para cada recomendador. Ao fazer isto encontrámos o problema de que em alguns casos o recomendador UBCF e AR não contêm recomendações, por isso foi escolhido um utilizador para o qual há recomendações em todos os recomendadores.
 
-Para tal foi criada um *dataframe* para cada N e foram feitas a predições para cada recomendador, sendo o código ocultado devido ao tamanho do mesmo.
+Para tal, foi criado um *dataframe* para cada N e foram feitas as predições para cada recomendador, sendo o código ocultado devido ao tamanho do mesmo.
 
 ```{r recs, echo = F, eval=F}
 user.r <- getData(set.movies,"known")[49]
@@ -317,7 +317,7 @@ Como podemos observar nos resultados obtidos, o recomendador Popular e o recomen
 O contexto é qualquer informação que possa ser utlizada para caracterizar uma situação. Para uma dada situação, podem existir vários contextos.
 Analisando a informação que temos dos utilizadores, podemos utilizar a idade como contexto para fazer a recomendação de filmes. Através da idade conseguimos perceber se é uma criança, adolescente ou adulto e com isso fazer recomendações tendo isso em conta. Por exemplo, se for uma criança fará mais sentido recomendar filmes de animação. 
 
-A localização de um utilizador pode também ser algo a ter conta pois por exemplo filmes com lingugem Espanhola fazem mais ser sentido ser recomendados a utilizadores que falem a essa linguagem, ou filmes que explorem aspetos culturais semelhantes às do país/região de um usário poderão recomendados ao mesmo.
+A localização de um utilizador pode também ser algo a ter conta pois,por exemplo, filmes com linguagem Espanhola fazem mais  sentido ser recomendados a utilizadores que falem a essa linguagem, ou filmes que explorem aspetos culturais semelhantes às do país/região de um utilizador poderão ser recomendados ao mesmo.
 
 ## Conclusão
 
