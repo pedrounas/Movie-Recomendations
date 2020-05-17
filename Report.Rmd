@@ -117,7 +117,7 @@ Neste gráfico é apresentado os 20 utilizadores que avaliaram o maior número d
 best.movies <- ratings %>% select(movieid, rating) %>% group_by(movieid) %>% filter(n() > 2000) %>% 
               as.data.frame
 best.movies <- aggregate(rating ~ movieid, best.movies, mean) %>% arrange(desc(rating)) %>% head(10) %>%
-              merge(data, by='movieid') %>% select(moviename,rating) # Originally ≈ 1000 movies
+              merge(data, by='movieid') %>% select(moviename,rating) # Originally ≈ 1000 movies 
 best.movies$moviename <- factor(best.movies$moviename, levels = best.movies$moviename[order(best.movies$rating)])
 
 ggplot(best.movies, aes(x=moviename, y=rating)) + 
@@ -133,8 +133,11 @@ Os 10 filmes com uma classficação maior estão apresentados neste gráfico, se
 
 ## Sistemas de recomendação 
 
-Começamos por fazer uma amostra dos dados, que contêm os id's dos utlizadores, os nomes dos filmes e o rating que deram a um determinado filme. Essa amostra contêm 3745 observações. 
+Começamos por fazer uma amostra dos dados, que contêm os id's dos utlizadores, os nomes dos filmes e o rating que deram a um determinado filme. 
 
+## Recomendação contextual
 
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+O contexto é qualquer informação que possa ser utlizada para caracterizar uma situação. Para uma dada situação, podem existir vários contextos.
+Analisando a informação que temos dos utilizadores, podemos utilizar a idade como contexto para fazer a recomendação de filmes. Através da idade conseguimos perceber se é uma criança, adolescente ou adulto e com isso fazer recomendações tendo isso em conta. Por exemplo, se for uma criança fará mais sentido recomendar filmes de animação. 
+O género do utilizador tambem é um factor que podemos ter em conta. 
+  

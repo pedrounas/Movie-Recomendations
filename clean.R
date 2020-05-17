@@ -12,10 +12,12 @@ ratings <- read.csv('Data/Ratings.csv')
 ratings.date <- ratings$date # Talvez usar isto no futuro 
 ratings <- ratings %>% select(userid,movieid,rating)
 
+
 top_critics <- ratings %>% group_by(userid) %>% filter(n() > 1000) %>% as.data.frame()
 sample_ratings <- top_critics[sample(nrow(top_critics), nrow(top_critics)/50), ]
 sample_ratings <- merge(sample_ratings, data, by='movieid')
 sample_ratings <- sample_ratings %>% select(userid,moviename,rating)
+
 
 sample_ratings_binary <- sample_ratings
 sample_ratings_binary$rating <-
@@ -43,18 +45,52 @@ b <- as(y, "binaryRatingMatrix")
 model_params <- list(support=10/dim(b)[2],
                      confidence=0.1)
 
-set.movies <-evaluationScheme(r,method='cross-validation',train=.7,given=1,goodRating=3.5,k=10)
-set.movies_ <-evaluationScheme(b,method='cross-validation',train=.7,given=1,k=10)
 
+
+set.movies <-evaluationScheme(r,method='cross-validation',given=2,goodRating=3.5,k=10)
+set.movies_ <-evaluationScheme(b,method='cross-validation',given=1,k=10)
+
+###################################### Foi para experimentar ######################
+#Evaluating the Rating
+  
 rec_POPULAR <- Recommender(getData(set.movies,"train"), method='POPULAR')
 rec_UBCF <- Recommender(getData(set.movies,"train"), method='UBCF')
 
+  
+
+pred_POPULAR <- predict(rec_POPULAR,getData(set.movies,"known"), type="ratings")
+pred_UBCF <- predict(rec_UBCF,getData(set.movies,"known"), type="ratings")
+
+
+#Nao me parece correto,
+qplot(rowCounts(pred_POPULAR)) + geom_histogram() +   
+  ggtitle("Distribution of movies per user")
+
+#Same, n deviamos ter users sem filmes 
+qplot(rowCounts(pred_UBCF)) + geom_histogram() +
+  ggtitle("Distribution of movies per user")
+
+
+eval_accuracy_POPULAR <- calcPredictionAccuracy(pred_POPULAR, getData(set.movies, "unknown"), byUser = TRUE, )
+head(eval_accuracy_POPULAR)
+
+eval_accuracy_UBCF <- calcPredictionAccuracy(pred_UBCF, getData(set.movies, "unknown"), byUser = TRUE)
+head(eval_accuracy_UBCF)
+
+#######################3
+
+rec_POPULAR <- Recommender(getData(set.movies,"train"), method='POPULAR')
+rec_UBCF <- Recommender(getData(set.movies,"train"), method='UBCF')
 rec_AR <- Recommender(getData(set.movies_,"train"), "AR", parameter=model_params)
+
 getModel(rec_AR)$rule_base
 
 pred_POPULAR <- predict(rec_POPULAR,getData(set.movies,"known"))
 pred_UBCF <- predict(rec_UBCF,getData(set.movies,"known"))
 pred_AR <- predict(rec_AR,getData(set.movies_,"known"))
+
+
+#Best Model
 
 methods <- list("popular" = list(name="POPULAR", param = NULL),
                 "user-based CF" = list(name="UBCF", param = NULL))
